@@ -112,11 +112,11 @@ function drawWindows(x, startY, maxWidth, height, depth) {
   const GAP = 10 + Math.random() * 10;
   const WINDOW_HEIGHT = 1.5;
   const X_PADDING = 2 + Math.random() + 5;
-  const COLOR_GAP = 35;
+  const COLOR_GAP = 15;
   const COLOR = [
-    175 + Math.floor(Math.random() * 80) + depth * COLOR_GAP,
-    175 + Math.floor(Math.random() * 80) + depth * COLOR_GAP,
-    175 +  Math.floor(Math.random() * 80) + depth * COLOR_GAP,
+    225 + depth * COLOR_GAP,
+    225 + depth * COLOR_GAP,
+    175  + depth * COLOR_GAP,
   ];
 
   let y = startY + GAP;
