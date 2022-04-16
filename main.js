@@ -1,12 +1,23 @@
-const NUM_DEPTHS = 4;
+const NUM_DEPTHS = 2;
 const DEPTH_GAP = (window.innerHeight * 0.6) / NUM_DEPTHS;
-const DEPTH_COLOR_GAP = 10;
+const DEPTH_COLOR_GAP = 15;
 const BASE_COLOR = hexToRGB(randomBaseColor());
+const OUTLINE_WEIGHT = 0;
+const MOON_COLOR = [240, 240, 240];
 function setup() {
   const canvas = createCanvas(window.innerWidth, window.innerHeight);
 
   // choose base color for picture
-  background(...BASE_COLOR);
+  // background(...BASE_COLOR);
+  const RADIUS = 200 * (0.8 + Math.random() * 0.4);
+  const x = RADIUS + Math.random() * (window.innerWidth - RADIUS);
+  const y = window.innerHeight / 2 - Math.random() * 100;
+
+  drawSky(x, y);
+  drawStars();
+  drawMoon(x, y, RADIUS);
+
+  stroke(...BASE_COLOR.map((component) => component * 0.2 * DEPTH_COLOR_GAP));
   for (let d = 0; d < NUM_DEPTHS; d++) {
     drawBuildings(d);
   }
@@ -21,19 +32,60 @@ function drawBuildings(depth) {
       Math.random() *
         (window.innerHeight * 0.6 - depth * DEPTH_GAP) *
         calculateHeightWeight(x);
-
-    fill(
-      ...BASE_COLOR.map(
-        (component) => component * 0.2 + depth * DEPTH_COLOR_GAP
-      )
+    const CURRENT_COLOR = BASE_COLOR.map(
+      (component) => component * 0.2 + depth * DEPTH_COLOR_GAP
     );
-    noStroke();
+    fill(...CURRENT_COLOR);
+
+    // noStroke();
+
+    strokeWeight(OUTLINE_WEIGHT);
+
     rect(x, window.innerHeight - buildingHeight, buildingWidth, buildingHeight);
+
+    drawWindows(
+      x,
+      window.innerHeight,
+      buildingWidth,
+      window.innerHeight - buildingHeight,
+      depth
+    );
+    stroke(...CURRENT_COLOR);
+
     drawBuildingDetail(x, depth, buildingWidth, buildingHeight);
 
-    const gap = buildingWidth / 3;
+    const gap = buildingWidth / 2;
     x += gap;
   }
+}
+
+function drawSky(moonX, moonY) {
+  const radius = window.innerWidth * 2;
+  colorMode(RGB);
+  const DARKENED_MOON_COLOR = MOON_COLOR.map(component => component - 150)
+  let newColor = lerpColor(color(...BASE_COLOR), color(...DARKENED_MOON_COLOR), 1);
+
+  for (let r = radius; r > 0; r--) {
+    // console.log(r);
+    // console.log(newColor._array)
+    strokeWeight(5);
+    stroke(newColor);
+    circle(moonX, moonY, r);
+    newColor = lerpColor(color(...BASE_COLOR), color(...DARKENED_MOON_COLOR), 1 - map(r, 0, radius, 0, 1));
+
+  }
+  colorMode(RGB);
+}
+
+function drawStars() {
+  const COUNT = 150;
+
+  fill(255);
+  noStroke();
+  for (let i = 0; i < COUNT; i++) {
+    circle(Math.random() * window.innerWidth, Math.random() * window.innerHeight, Math.floor(1 + Math.random() * 2));
+  }
+
 }
 
 /**
@@ -46,7 +98,43 @@ function calculateHeightWeight(x) {
   return SCALE * (1 - difference / window.innerWidth); // represent the difference as a percentage of the screen width
 }
 
+function drawWindows(x, startY, maxWidth, height, depth) {
+  const GAP = 15;
+  const WINDOW_HEIGHT = 1.5;
+  const X_PADDING = 5;
+  const COLOR_GAP = 45;
+  const COLOR = [
+    200 + depth * COLOR_GAP,
+    200 + depth * COLOR_GAP,
+    100 + depth * COLOR_GAP,
+  ];
+
+  let y = startY + GAP;
+  stroke(...COLOR);
+  strokeWeight(WINDOW_HEIGHT);
+  while (y > height + GAP) {
+    const leftOffset = (Math.random() * maxWidth) / 4;
+    const rightOffset = (Math.random() * maxWidth) / 4;
+
+    const exist = Math.random() < 0.66;
+    if (exist) {
+      line(
+        x + X_PADDING + leftOffset,
+        y,
+        x + maxWidth - rightOffset - X_PADDING,
+        y
+      );
+    }
+
+    y -= GAP;
+  }
+
+  strokeCap(ROUND);
+}
+
 function drawBuildingDetail(x, depth, buildingWidth, buildingHeight) {
+  stroke(0);
+  strokeWeight(OUTLINE_WEIGHT);
   /*
   1. Antennas (thin, high) <1
   2. Centered triangle top <2
@@ -89,9 +177,9 @@ function drawBuildingDetail(x, depth, buildingWidth, buildingHeight) {
     );
   } else if (choice < 3) {
     // slightly thinner top
-    const widthScale = 0.7 + Math.random() * 0.3;
+    const widthScale = 0.5 + Math.random() * 0.3;
 
-    const height = 50 + Math.random() * 50;
+    const height = 10 + Math.random() * 50;
     const pieceWidth = buildingWidth * widthScale;
     rect(
       x + buildingWidth / 2 - pieceWidth / 2,
@@ -128,6 +216,15 @@ function drawBuildingDetail(x, depth, buildingWidth, buildingHeight) {
   // 4-10 nothing happens
 }
 
+function drawMoon(x, y, radius) {
+
+
+  fill(MOON_COLOR);
+  noStroke();
+  circle(x, y, radius * 2);
+  return [x, y];
+}
+
 function hexToRGB(hex) {
   return [
     parseInt(hex[1] + hex[2], 16),
@@ -138,16 +235,18 @@ function hexToRGB(hex) {
 
 function randomBaseColor() {
   const options = [
-    "#280F36",
-    "#672C70",
-    "#C86B98",
-    "#F09F9C",
-    "#08183A",
-    "#152852",
-    "#4B3D60",
-    "#FD5E53",
-    "#23233B",
-    "#202124",
+    "#1C2954",
+    "#0B1341",
+    "#352657",
+    "#311254",
+    "#030116",
+    "#292D71",
+    "#060C23",
+    "#272B4F",
+    "#010820",
+    "#3B0762",
+    "#3D1C51"
+
   ];
 
   return options[Math.floor(Math.random() * options.length)];
